@@ -1,0 +1,424 @@
+<UserControl x:Class="HangmanGame.Views.GameView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:HangmanGame.ViewModels"
+             mc:Ignorable="d"
+             Background="#F5F5F5">
+
+    <DockPanel>
+        <!-- Menu Bar -->
+        <Menu DockPanel.Dock="Top" Background="#1565C0" Foreground="White" Padding="4,2">
+            <Menu.Resources>
+                <Style TargetType="MenuItem">
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="FontSize" Value="13"/>
+                </Style>
+            </Menu.Resources>
+            <MenuItem Header="Game">
+                <MenuItem Header="New Game" Command="{Binding NewGameCommand}"/>
+                <MenuItem Header="Open Game" Command="{Binding OpenGameCommand}"/>
+                <MenuItem Header="Save Game" Command="{Binding SaveGameCommand}"/>
+                <Separator/>
+                <MenuItem Header="Statistics" Command="{Binding ShowStatisticsCommand}"/>
+                <Separator/>
+                <MenuItem Header="Logout" Command="{Binding LogoutCommand}"/>
+            </MenuItem>
+        </Menu>
+
+        <!-- Main Content -->
+        <Grid Margin="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: User Info + Hangman Drawing + Game Controls -->
+            <StackPanel Grid.Column="0" Margin="0,0,12,0">
+
+                <!-- User Info Card -->
+                <Border Background="White" CornerRadius="10" Padding="16" Margin="0,0,0,12">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.12"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="Player" FontSize="12" Foreground="#9E9E9E" Margin="0,0,0,6"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="50"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Width="44" Height="44" CornerRadius="22" ClipToBounds="True"
+                                    BorderBrush="#E0E0E0" BorderThickness="1">
+                                <Grid>
+                                    <Ellipse Fill="#E3F2FD"/>
+                                    <TextBlock Text="👤" FontSize="24"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Visibility="{Binding CurrentUser.ImagePath, Converter={StaticResource NullToVisibility}, ConverterParameter=Invert}"/>
+                                    <Image Source="{Binding CurrentUser.ImagePath}" Stretch="UniformToFill"
+                                           Visibility="{Binding CurrentUser.ImagePath, Converter={StaticResource NullToVisibility}}"/>
+                                </Grid>
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding CurrentUser.Name}" FontSize="16" FontWeight="SemiBold"/>
+                                <TextBlock FontSize="12" Foreground="#757575">
+                                    <Run Text="Category: "/>
+                                    <Run Text="{Binding CurrentCategory}"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Timer + Wrong Guesses -->
+                <Border Background="White" CornerRadius="10" Padding="16" Margin="0,0,0,12">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.12"/>
+                    </Border.Effect>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="⏱ Time" FontSize="12" Foreground="#9E9E9E" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding RemainingSeconds}" FontSize="28" FontWeight="Bold"
+                                       HorizontalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#1565C0"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding RemainingSeconds}" Value="10">
+                                                <Setter Property="Foreground" Value="#FF6F00"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding RemainingSeconds}" Value="5">
+                                                <Setter Property="Foreground" Value="#F44336"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <TextBlock Text="seconds" FontSize="11" Foreground="#9E9E9E" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                            <TextBlock Text="❌ Errors" FontSize="12" Foreground="#9E9E9E" HorizontalAlignment="Center"/>
+                            <TextBlock FontSize="28" FontWeight="Bold" HorizontalAlignment="Center"
+                                       Foreground="#F44336">
+                                <Run Text="{Binding WrongGuesses}"/>
+                                <Run Text="/6"/>
+                            </TextBlock>
+                            <TextBlock Text="mistakes" FontSize="11" Foreground="#9E9E9E" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Hangman Drawing Canvas -->
+                <Border Background="White" CornerRadius="10" Padding="16" Margin="0,0,0,12">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.12"/>
+                    </Border.Effect>
+                    <Canvas Width="200" Height="220" HorizontalAlignment="Center">
+                        <!-- Gallows structure (always visible) -->
+                        <!-- Base -->
+                        <Line X1="10" Y1="210" X2="190" Y2="210" Stroke="#424242" StrokeThickness="4" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                        <!-- Pole -->
+                        <Line X1="60" Y1="210" X2="60" Y2="20" Stroke="#424242" StrokeThickness="4" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                        <!-- Top beam -->
+                        <Line X1="60" Y1="20" X2="140" Y2="20" Stroke="#424242" StrokeThickness="4" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                        <!-- Rope -->
+                        <Line X1="140" Y1="20" X2="140" Y2="50" Stroke="#424242" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                        <!-- Support beam -->
+                        <Line X1="60" Y1="55" X2="95" Y2="20" Stroke="#424242" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+
+                        <!-- Head (wrong guess 1) -->
+                        <Ellipse Canvas.Left="120" Canvas.Top="50" Width="40" Height="40"
+                                 Stroke="#1565C0" StrokeThickness="3" Fill="White">
+                            <Ellipse.Style>
+                                <Style TargetType="Ellipse">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="1">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="2">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="3">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="4">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="5">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="6">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Ellipse.Style>
+                        </Ellipse>
+
+                        <!-- Body (wrong guess 2) -->
+                        <Line X1="140" Y1="90" X2="140" Y2="150" Stroke="#1565C0" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+                            <Line.Style>
+                                <Style TargetType="Line">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="2">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="3">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="4">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="5">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="6">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Line.Style>
+                        </Line>
+
+                        <!-- Left Arm (wrong guess 3) -->
+                        <Line X1="140" Y1="110" X2="110" Y2="130" Stroke="#1565C0" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+                            <Line.Style>
+                                <Style TargetType="Line">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="3">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="4">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="5">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="6">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Line.Style>
+                        </Line>
+
+                        <!-- Right Arm (wrong guess 4) -->
+                        <Line X1="140" Y1="110" X2="170" Y2="130" Stroke="#1565C0" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+                            <Line.Style>
+                                <Style TargetType="Line">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="4">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="5">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="6">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Line.Style>
+                        </Line>
+
+                        <!-- Left Leg (wrong guess 5) -->
+                        <Line X1="140" Y1="150" X2="110" Y2="185" Stroke="#1565C0" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+                            <Line.Style>
+                                <Style TargetType="Line">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="5">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="6">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Line.Style>
+                        </Line>
+
+                        <!-- Right Leg (wrong guess 6) -->
+                        <Line X1="140" Y1="150" X2="170" Y2="185" Stroke="#1565C0" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+                            <Line.Style>
+                                <Style TargetType="Line">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding WrongGuesses}" Value="6">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Line.Style>
+                        </Line>
+                    </Canvas>
+                </Border>
+
+                <!-- Category Selection -->
+                <Border Background="White" CornerRadius="10" Padding="16" Margin="0,0,0,12">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.12"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="Category" FontSize="13" Foreground="#9E9E9E" Margin="0,0,0,6"/>
+                        <ComboBox ItemsSource="{Binding Categories}"
+                                  SelectedItem="{Binding SelectedCategory}"
+                                  FontSize="14" Padding="8,4"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- New Game Button -->
+                <Button Content="▶ New Game"
+                        Command="{Binding NewGameCommand}"
+                        Style="{StaticResource PrimaryButton}"
+                        Height="44" FontSize="15"/>
+            </StackPanel>
+
+            <!-- Right: Word + Keyboard + Message -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Word Display + Message -->
+                <Border Grid.Row="0" Background="White" CornerRadius="10" Padding="30">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.12"/>
+                    </Border.Effect>
+                    <Grid VerticalAlignment="Center">
+                        <!-- Not started yet -->
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                                    Visibility="{Binding IsGameActive, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}">
+                            <TextBlock Text="🎮" FontSize="64" HorizontalAlignment="Center" Margin="0,0,0,16"/>
+                            <TextBlock Text="Select a category and press" FontSize="16" Foreground="#9E9E9E"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="'New Game' to start!" FontSize="16" Foreground="#9E9E9E"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Active game: word display -->
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                                    Visibility="{Binding IsGameActive, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="{Binding DisplayWord}"
+                                       FontSize="36" FontWeight="Bold" FontFamily="Courier New"
+                                       HorizontalAlignment="Center"
+                                       Foreground="#1565C0"
+                                       Margin="0,0,0,20"/>
+
+                            <!-- Game Over Message -->
+                            <Border CornerRadius="8" Padding="16,12" HorizontalAlignment="Center"
+                                    Visibility="{Binding IsGameOver, Converter={StaticResource BoolToVisibility}}">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding GameMessage}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="{Binding GameMessage}"
+                                           FontSize="18" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center" TextWrapping="Wrap">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#F44336"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding WrongGuesses}" Value="0">
+                                                    <Setter Property="Foreground" Value="#4CAF50"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Keyboard -->
+                <Border Grid.Row="1" Background="White" CornerRadius="10" Padding="20" Margin="0,12,0,0">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.12"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="Keyboard" FontSize="13" Foreground="#9E9E9E" Margin="0,0,0,12"/>
+                        <ItemsControl ItemsSource="{Binding Alphabet}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel HorizontalAlignment="Center"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Width="38" Height="38" Margin="3"
+                                            Command="{Binding DataContext.GuessLetterCommand,
+                                                RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding Letter}"
+                                            Cursor="Hand"
+                                            FontSize="14" FontWeight="SemiBold">
+                                        <Button.Content>
+                                            <TextBlock Text="{Binding Letter}"/>
+                                        </Button.Content>
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="Bd" CornerRadius="6"
+                                                                    Background="#E3F2FD"
+                                                                    BorderBrush="#90CAF9"
+                                                                    BorderThickness="1">
+                                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                                  VerticalAlignment="Center"/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="Bd" Property="Background" Value="#BBDEFB"/>
+                                                                </Trigger>
+                                                                <DataTrigger Binding="{Binding IsGuessed}" Value="True">
+                                                                    <Setter TargetName="Bd" Property="Opacity" Value="0.5"/>
+                                                                </DataTrigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsGuessed}" Value="True">
+                                                        <Setter Property="IsEnabled" Value="False"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsCorrect}" Value="True">
+                                                        <Setter Property="Foreground" Value="#2E7D32"/>
+                                                    </DataTrigger>
+                                                    <MultiDataTrigger>
+                                                        <MultiDataTrigger.Conditions>
+                                                            <Condition Binding="{Binding IsGuessed}" Value="True"/>
+                                                            <Condition Binding="{Binding IsCorrect}" Value="False"/>
+                                                        </MultiDataTrigger.Conditions>
+                                                        <Setter Property="Foreground" Value="#C62828"/>
+                                                    </MultiDataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </DockPanel>
+</UserControl>

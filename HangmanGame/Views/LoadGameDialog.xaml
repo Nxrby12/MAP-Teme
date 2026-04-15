@@ -1,0 +1,93 @@
+<Window x:Class="HangmanGame.Views.LoadGameDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Load Saved Game" Height="400" Width="500"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#F5F5F5">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Select a saved game to load:"
+                   FontSize="15" FontWeight="SemiBold" Margin="0,0,0,12" Foreground="#424242"/>
+
+        <ListBox Grid.Row="1" x:Name="SavedGamesList"
+                 BorderBrush="#E0E0E0" BorderThickness="1"
+                 Background="White">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border Padding="10,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock FontSize="14" FontWeight="SemiBold">
+                                    <Run Text="Category: "/>
+                                    <Run Text="{Binding Category}" Foreground="#1565C0"/>
+                                </TextBlock>
+                                <TextBlock FontSize="13" Foreground="#616161">
+                                    <Run Text="Word: "/>
+                                    <Run Text="{Binding Word}"/>
+                                </TextBlock>
+                                <TextBlock FontSize="12" Foreground="#9E9E9E">
+                                    <Run Text="Errors: "/>
+                                    <Run Text="{Binding WrongGuesses}"/>
+                                    <Run Text=" | Time left: "/>
+                                    <Run Text="{Binding RemainingSeconds}"/>
+                                    <Run Text="s"/>
+                                </TextBlock>
+                            </StackPanel>
+                            <TextBlock Grid.Column="1" FontSize="12" Foreground="#9E9E9E"
+                                       VerticalAlignment="Center" Margin="10,0,0,0"
+                                       Text="{Binding SavedAt, StringFormat='Saved: {0:MM/dd HH:mm}'}"/>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right"
+                    Margin="0,12,0,0">
+            <Button Content="Load Game" Width="100" Height="34" Margin="0,0,8,0"
+                    Background="#2196F3" Foreground="White" BorderThickness="0"
+                    Click="LoadButton_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1976D2"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+            <Button Content="Cancel" Width="80" Height="34"
+                    Background="#9E9E9E" Foreground="White" BorderThickness="0"
+                    Click="CancelButton_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#757575"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        </StackPanel>
+    </Grid>
+</Window>
