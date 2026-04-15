@@ -1,0 +1,40 @@
+<Window x:Class="HangmanGame.Views.StatisticsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Statistics" Height="520" Width="650"
+        WindowStartupLocation="CenterOwner"
+        Background="#F5F5F5">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="📊 Game Statistics" FontSize="20" FontWeight="Bold"
+                   Margin="0,0,0,16" Foreground="#1565C0"/>
+
+        <TabControl Grid.Row="1" x:Name="UsersTabControl" Background="White" BorderBrush="#E0E0E0">
+            <!-- Tabs are added in code-behind -->
+        </TabControl>
+
+        <Button Grid.Row="2" Content="Close" Width="100" Height="36"
+                HorizontalAlignment="Right" Margin="0,12,0,0"
+                Background="#9E9E9E" Foreground="White" BorderThickness="0"
+                Click="CloseButton_Click">
+            <Button.Template>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="4"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#757575"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Button.Template>
+        </Button>
+    </Grid>
+</Window>

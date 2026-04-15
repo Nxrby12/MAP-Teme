@@ -1,0 +1,191 @@
+<UserControl x:Class="HangmanGame.Views.LoginView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             Background="#F5F5F5">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left Panel: Create New User -->
+        <Border Grid.Column="0" Margin="30" Background="White" CornerRadius="12">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.15"/>
+            </Border.Effect>
+            <StackPanel Margin="30" VerticalAlignment="Center">
+                <!-- Title -->
+                <TextBlock Text="🎮 Hangman Game" FontSize="28" FontWeight="Bold"
+                           HorizontalAlignment="Center" Foreground="#1565C0" Margin="0,0,0,8"/>
+                <TextBlock Text="Create New Profile" FontSize="18" FontWeight="SemiBold"
+                           HorizontalAlignment="Center" Foreground="#424242" Margin="0,0,0,24"/>
+
+                <!-- Avatar Preview -->
+                <Border Width="100" Height="100" CornerRadius="50" HorizontalAlignment="Center"
+                        Margin="0,0,0,16" BorderBrush="#BDBDBD" BorderThickness="2" ClipToBounds="True">
+                    <Grid>
+                        <Ellipse Fill="#E3F2FD"/>
+                        <TextBlock Text="👤" FontSize="48" HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Visibility="{Binding SelectedImagePath, Converter={StaticResource NullToVisibility}, ConverterParameter=Invert}"/>
+                        <Image Source="{Binding SelectedImagePath}" Stretch="UniformToFill"
+                               Visibility="{Binding SelectedImagePath, Converter={StaticResource NullToVisibility}}"/>
+                    </Grid>
+                </Border>
+
+                <!-- Image Browse Button -->
+                <Button Content="📷 Choose Profile Picture"
+                        Command="{Binding BrowseImageCommand}"
+                        Style="{StaticResource SecondaryButton}"
+                        HorizontalAlignment="Center"
+                        Margin="0,0,0,20"/>
+
+                <!-- Name Field -->
+                <TextBlock Text="Username" FontSize="13" Foreground="#616161" Margin="0,0,0,4"/>
+                <TextBox Text="{Binding NewUserName, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource InputField}"
+                         Margin="0,0,0,16"/>
+
+                <!-- Create Button -->
+                <Button Content="✓ Create Profile"
+                        Command="{Binding CreateUserCommand}"
+                        Style="{StaticResource PrimaryButton}"
+                        HorizontalAlignment="Stretch"
+                        Height="40"
+                        Margin="0,0,0,12"/>
+
+                <!-- Status Message -->
+                <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"
+                           HorizontalAlignment="Center" FontSize="13"
+                           Margin="0,8,0,0">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsError}" Value="True">
+                                    <Setter Property="Foreground" Value="#F44336"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsError}" Value="False">
+                                    <Setter Property="Foreground" Value="#4CAF50"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </StackPanel>
+        </Border>
+
+        <!-- Right Panel: Select/Delete User -->
+        <Border Grid.Column="1" Margin="30" Background="White" CornerRadius="12">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.15"/>
+            </Border.Effect>
+            <StackPanel Margin="30" VerticalAlignment="Center">
+                <TextBlock Text="Select Profile" FontSize="18" FontWeight="SemiBold"
+                           HorizontalAlignment="Center" Foreground="#424242" Margin="0,0,0,20"/>
+
+                <!-- User List -->
+                <Border BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="6" Height="320"
+                        Margin="0,0,0,16">
+                    <ListBox ItemsSource="{Binding Users}"
+                             SelectedItem="{Binding SelectedUser}"
+                             BorderThickness="0"
+                             Background="Transparent"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="10,8" Margin="0,2">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="50"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- User Avatar -->
+                                        <Border Width="40" Height="40" CornerRadius="20"
+                                                ClipToBounds="True" BorderBrush="#E0E0E0" BorderThickness="1">
+                                            <Grid>
+                                                <Ellipse Fill="#E3F2FD"/>
+                                                <TextBlock Text="👤" FontSize="22"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                           Visibility="{Binding ImagePath, Converter={StaticResource NullToVisibility}, ConverterParameter=Invert}"/>
+                                                <Image Source="{Binding ImagePath}" Stretch="UniformToFill"
+                                                       Visibility="{Binding ImagePath, Converter={StaticResource NullToVisibility}}"/>
+                                            </Grid>
+                                        </Border>
+
+                                        <!-- User Name -->
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Name}"
+                                                   VerticalAlignment="Center"
+                                                   FontSize="15"
+                                                   Margin="10,0,0,0"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                                    CornerRadius="6" Margin="4,2">
+                                                <ContentPresenter/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter TargetName="Bd" Property="Background" Value="#E3F2FD"/>
+                                                </Trigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bd" Property="Background" Value="#F5F5F5"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                    </ListBox>
+                </Border>
+
+                <!-- Empty State -->
+                <TextBlock Text="No profiles yet. Create one!" FontSize="13" Foreground="#9E9E9E"
+                           HorizontalAlignment="Center" Margin="0,0,0,16">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Users.Count}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <!-- Action Buttons -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Button Grid.Column="0" Content="▶ Play"
+                            Command="{Binding LoginCommand}"
+                            Style="{StaticResource PrimaryButton}"
+                            Height="40"/>
+
+                    <Button Grid.Column="2" Content="🗑 Delete"
+                            Command="{Binding DeleteUserCommand}"
+                            Style="{StaticResource DangerButton}"
+                            Height="40"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
